@@ -10,7 +10,7 @@ def compute_BMI(height: float, weight: float) -> float:
     :param weight: weight in kg
     :return: BMI in kg/m**2
     """
-    return weight / (height ** 2)
+    return round(weight / (height ** 2), 2)
 
 def parse_row(row: str) -> list:
     """
@@ -21,16 +21,19 @@ def parse_row(row: str) -> list:
     """
     values = row.split(",")
 
+    # check for missing values in a row
     if len(values) != 5:
-        raise TextFormatException("incorrect value of numbers")
+        raise TextFormatException("incorrect number of values in the row")
 
+    # check for empty values in a row
     if "" in values:
-        raise MissingValueException("missing value")
+        raise MissingValueException(f"missing {values.index('')} in the row")
 
     values[0] = int(values[0])
     values[3] = float(values[3])
     values[4] = float(values[4])
 
+    # outlier check for height in meters (should be less than 3 meters)
     if values[4] > 3:
         raise MeasurementUnitException("height isn't in meters")
 
@@ -42,13 +45,14 @@ def main():
     with open("data.csv", "r") as data_file, open("bmi.csv", "w") as output_file:
         output_file.write("Exam ID,BMI\n")
 
+        #read header line to avoid errors when parsing the data
         data_file.readline()
 
         for row in data_file:
             try:
                 parsed_row = parse_row(row)
                 bmi = compute_BMI(parsed_row[4], parsed_row[3])
-                print(bmi)
+                output_file.write(f"{parsed_row[0]},{bmi}\n")
 
             except MissingValueException:
                 exam_id = row.split(",")[0]
@@ -60,6 +64,6 @@ def main():
 
             except TextFormatException:
                 exam_id = row.split(",")[0]
-                print(f"Exam ID {exam_id}: incorrect text format")
+                print(f"Exam ID {exam_id}: incorrect name format")
 
 main()
